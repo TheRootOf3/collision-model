@@ -24,18 +24,20 @@ screen.fill((255,255,255))
 class Table():
     def __init__(self):
         self.balls = []
-        # self.friction = 0.9993  # 1 = no friction 
+        # self.friction = 0.93  # 1 = no friction 
         # self.friction = 0.9999
         self.friction = 1
-        self.t_time = 0
+        # self.t_time = 0
         self.collision_list = []
-        self.depth = 0
+        self.d_time = 0
 
     def copy_table(self):
         newTable = Table()
         newTable.balls = copy.deepcopy(self.balls)
         newTable.friction = self.friction
-        newTable.t_time = self.t_time
+        # newTable.t_time = self.t_time
+        newTable.d_time = self.d_time
+
         
         return newTable
 
@@ -43,8 +45,28 @@ class Table():
     def add_ball(self, ballID, pos, r, vel_vector = np.array([1., 1.]), color = (255, 0, 0)):
         self.balls.append(Ball(ballID, pos, r, vel_vector, color))
     
+
+    def check_for_update_prediction(self, anim_time):
+        if anim_time >= self.d_time:
+            self.update_table()
+            self.predict_all_collisions(1) #prediction depth
+
     def update_table(self):
-        pass
+
+        if len(table.collision_list) != 0:
+            for element in table.collision_list:
+                    for ball in table.balls:
+                        if ball.ballID == element[0]:
+                            ball.vel_vector = copy.deepcopy(element[2])
+                            ball.pos = copy.deepcopy(element[3])
+                            # print(ball.pos)
+                            ball.ball_time = element[1]
+                
+        for ball in table.balls:
+            # print(ball.pos, ball.vel_vector)
+            ball.update_ball_pos(self.d_time- ball.ball_time)
+            ball.startpos = copy.deepcopy(ball.pos)
+            ball.ball_time = self.d_time
         
         # self.predict_collisions_ball()
         # self.predict_collisions_wall()
@@ -62,157 +84,46 @@ class Table():
         #     ball.update_ball(self.t_time)
 
 
+
+
     def predict_all_collisions(self, depth_time):
-        self.depth = depth_time + self.t_time
+        tmp_depth_time = depth_time
+
         self.collision_list = []
         pred_table = self.copy_table()
 
         while depth_time >= 0:
-            # view.render(screen, pred_table)
-            # pygame.display.flip()
 
-            # time.sleep(0.1)
+            first_col = pred_table.predict_wall_ball()
 
-            # for x in pred_table.balls:
-            #     print(x.pos)
+            if first_col[-1] > depth_time:
+                break
 
-
-            first_wall_col = pred_table.predict_collisions_wall()
-            first_ball_col = pred_table.predict_collisions_ball()
-            # print(first_wall_col)
-            # print(first_ball_col)
-            first_col_time = 0
-            # time.sleep(10)
-            if first_ball_col is None or first_wall_col[-1] < first_ball_col[-1]:
-                first_col_time = first_wall_col[-1]
-            else:
-                first_col_time = first_ball_col[-1]
-
-            # print(first_col_time, depth_time)
-            if first_col_time > depth_time:
-                # print("----> ", col_pred_list)
-
-                return
-
-            if first_ball_col is None or first_wall_col[-1] < first_ball_col[-1]:
-                # print("a")
-                for ball in pred_table.balls:
-                    ball.update_ball_pos(first_col_time)
-                # print(first_wall_col[0].vel_vector)
-                first_wall_col[0].vel_vector = pred_table.return_new_wall_vector(first_wall_col[0], first_wall_col[1])
-                # print(first_wall_col[0].vel_vector)
-
-                depth_time -= first_wall_col[-1]
             
-                self.collision_list.append([first_wall_col[0].ballID, pred_table.t_time + first_wall_col[-1], copy.deepcopy(first_wall_col[0].vel_vector), copy.deepcopy(first_wall_col[0].pos)])
-                pred_table.t_time += first_wall_col[-1]
+            for ball in pred_table.balls:
+                ball.update_ball_pos(first_col[-1])
+
+            if first_col[0] == 0:
+                # for ball in pred_table.balls:
+                #     ball.update_ball_pos(first_col[-1])
+                first_col[1].vel_vector = pred_table.return_new_wall_vector(first_col[1], first_col[2])
+
+                depth_time -= first_col[-1]
+            
+                self.collision_list.append([first_col[1].ballID, pred_table.d_time + first_col[-1], copy.deepcopy(first_col[1].vel_vector), copy.deepcopy(first_col[1].pos)])
+                pred_table.d_time += first_col[-1]
 
             else:
-                # print("b")
 
-                for ball in pred_table.balls:
-                    ball.update_ball_pos(first_col_time)
-                #     print(ball.pos)
-                # print(self.balls[0].pos, self.balls[1].pos)
 
-                # time.sleep(1)
-
-                first_ball_col[0].vel_vector, first_ball_col[1].vel_vector = pred_table.calculate_new_vectors(first_ball_col[0].mass, first_ball_col[1].mass, first_ball_col[0].vel_vector, first_ball_col[1].vel_vector, first_ball_col[0].pos, first_ball_col[1].pos)
+                first_col[1].vel_vector, first_col[2].vel_vector = pred_table.calculate_new_vectors(first_col[1].mass, first_col[2].mass, first_col[1].vel_vector, first_col[2].vel_vector, first_col[1].pos, first_col[2].pos)
                 
+                depth_time -= first_col[-1]
+                self.collision_list.append([first_col[1].ballID, pred_table.d_time + first_col[-1], copy.deepcopy(first_col[1].vel_vector), copy.deepcopy(first_col[1].pos)])
+                self.collision_list.append([first_col[2].ballID, pred_table.d_time + first_col[-1], copy.deepcopy(first_col[2].vel_vector), copy.deepcopy(first_col[2].pos)])
+                pred_table.d_time += first_col[-1]
 
-                depth_time -= first_ball_col[-1]
-                self.collision_list.append([first_ball_col[0].ballID, pred_table.t_time + first_ball_col[-1], copy.deepcopy(first_ball_col[0].vel_vector), copy.deepcopy(first_ball_col[0].pos)])
-                self.collision_list.append([first_ball_col[1].ballID, pred_table.t_time + first_ball_col[-1], copy.deepcopy(first_ball_col[1].vel_vector), copy.deepcopy(first_ball_col[1].pos)])
-                pred_table.t_time += first_ball_col[-1]
-                # time.sleep(10)
-
-
-            # for x in pred_table.balls:
-            #     print(x.pos)
-            
-            # view.render(screen, pred_table)
-            # pygame.display.flip()
-            # time.sleep(10)
-
-            # print("-------------------------------")
-        # print("----> ", col_pred_list)
-        # time.sleep(10)
-
-
-    def predict_live_collisions(self, depth_time):
-        pred_table = self.copy_table()
-        self.collision_list = []
-
-        while depth_time >= 0:
-            # view.render(screen, pred_table)
-            # pygame.display.flip()
-
-            # time.sleep(0.1)
-
-            # for x in pred_table.balls:
-            #     print(x.pos)
-
-
-            first_wall_col = pred_table.predict_collisions_wall()
-            first_ball_col = pred_table.predict_collisions_ball()
-            # print(first_wall_col)
-            # print(first_ball_col)
-            first_col_time = 0
-            # time.sleep(10)
-            if first_ball_col is None or first_wall_col[-1] < first_ball_col[-1]:
-                first_col_time = first_wall_col[-1]
-            else:
-                first_col_time = first_ball_col[-1]
-
-            # print(first_col_time, depth_time)
-            if first_col_time > depth_time:
-                # print("----> ", col_pred_list)
-
-                return
-
-            if first_ball_col is None or first_wall_col[-1] < first_ball_col[-1]:
-                # print("a")
-                for ball in pred_table.balls:
-                    ball.update_ball_pos(first_col_time)
-                # print(first_wall_col[0].vel_vector)
-                first_wall_col[0].vel_vector = pred_table.return_new_wall_vector(first_wall_col[0], first_wall_col[1])
-                # print(first_wall_col[0].vel_vector)
-
-                depth_time -= first_wall_col[-1]
-            
-                self.collision_list.append([first_wall_col[0].ballID, pred_table.t_time + first_wall_col[-1], copy.deepcopy(first_wall_col[0].vel_vector), copy.deepcopy(first_wall_col[0].pos)])
-                pred_table.t_time += first_wall_col[-1]
-
-            else:
-                # print("b")
-
-                for ball in pred_table.balls:
-                    ball.update_ball_pos(first_col_time)
-                    # print(ball.pos)
-                # print(self.balls[0].pos, self.balls[1].pos)
-
-                # time.sleep(1)
-
-                first_ball_col[0].vel_vector, first_ball_col[1].vel_vector = pred_table.calculate_new_vectors(first_ball_col[0].mass, first_ball_col[1].mass, first_ball_col[0].vel_vector, first_ball_col[1].vel_vector, first_ball_col[0].pos, first_ball_col[1].pos)
-                
-
-                depth_time -= first_ball_col[-1]
-                self.collision_list.append([first_ball_col[0].ballID, pred_table.t_time + first_ball_col[-1], copy.deepcopy(first_ball_col[0].vel_vector), copy.deepcopy(first_ball_col[0].pos)])
-                self.collision_list.append([first_ball_col[1].ballID, pred_table.t_time + first_ball_col[-1], copy.deepcopy(first_ball_col[1].vel_vector), copy.deepcopy(first_ball_col[1].pos)])
-                pred_table.t_time += first_ball_col[-1]
-                # time.sleep(10)
-
-
-            # for x in pred_table.balls:
-            #     print(x.pos)
-            
-            # view.render(screen, pred_table)
-            # pygame.display.flip()
-            # time.sleep(10)
-
-            # print("-------------------------------")
-        # print("----> ", col_pred_list)
-        # time.sleep(10)
+        self.d_time += tmp_depth_time
 
     def return_min_index(self, list_of_tuples):
         if len(list_of_tuples) is 0:
@@ -226,24 +137,29 @@ class Table():
                 min_indx = x
 
         return min_indx
+    
+    def return_first_col(self, col1, col2):
+        if col2 is None or col1[-1] < col2[-1]:
+            return col1
+        else:
+            return col2
 
-
-
-    def predict_collisions_wall(self):
+    def predict_wall_ball(self):
         col_list = []
         for ball in self.balls:
             col_time, wall = self.calculate_wall_col_time(ball)
-            col_list.append((ball, wall, col_time))
-            self.set_ball_color(ball, wall)
+            col_list.append((0, ball, wall, col_time))
 
+        for ball1, ball2 in itertools.combinations(self.balls, 2):
+            col_time = self.calculate_ball_col_time(ball1, ball2)
+            if col_time != None:
+                col_list.append((1, ball1, ball2, col_time))
+        
         min_index = self.return_min_index(col_list)
         if min_index is None:
             return None 
         else:
             return col_list[min_index]
-            # print(self.return_new_wall_vector(ball, vector))
-        # time.sleep(0.1)
-        # time.sleep(1)
     
     def set_ball_color(self, ball, wall):
         if ball.color != (255,0,0):
@@ -262,27 +178,6 @@ class Table():
         else:
             return (ball.vel_vector * np.array([1,-1]))
 
-    def predict_collisions_ball(self):
-        col_list = []
-        for ball1, ball2 in itertools.combinations(self.balls, 2):
-            col_time = self.calculate_ball_col_time(ball1, ball2)
-            if col_time != None:
-                col_list.append((ball1, ball2, col_time))
-
-        min_index = self.return_min_index(col_list)
-        if min_index is None:
-            return None 
-        else:
-            return col_list[min_index]
-
-        # for ball in self.balls:
-        #     ball.color = (50,50,50)
-
-        # for ball1, ball2, _ in col_list:
-        #     ball1.color = (255,0,0)
-        #     ball2.color = (255,0,0)
-        # time.sleep(0.01)
-
     def calculate_ball_col_time(self, ball1, ball2):
        
         p = [np.dot((ball1.vel_vector - ball2.vel_vector), (ball1.vel_vector - ball2.vel_vector)),
@@ -296,8 +191,6 @@ class Table():
             if self.check_calculated_time(x, ball1) and self.check_calculated_time(x, ball2):
                 correct_roots.append(x)
 
-        # print(roots)
-        # print(correct_roots)
         if len(correct_roots) == 0:
             return None
         else:
@@ -388,6 +281,42 @@ class Table():
             
         return True
 
+    def create_ball_set_to_render(self, t_time2):
+        ball_set = []
+
+        for ball in self.balls:
+            # print(ball.ballID, ball.pos)
+            ball_set.append(ball.copy_ball())
+
+        if len(self.collision_list) > 0:
+
+            if t_time2 > self.d_time:
+                print("END!!!!")
+                return None
+
+            for element in self.collision_list:
+                # print(element)
+                # print(t_time)
+                # time.sleep(1)
+                if element[1] > t_time2:
+                    break
+                else:
+                    for ball in ball_set:
+                        if ball.ballID == element[0]:
+                            ball.vel_vector = copy.deepcopy(element[2])
+                            ball.pos = copy.deepcopy(element[3])
+                            # print(ball.pos)
+                            ball.ball_time = copy.deepcopy(element[1])
+        
+        for ball in ball_set:
+            ball.pos[0] = ball.pos[0] + (ball.vel_vector[0] * (t_time2 - ball.ball_time))
+            ball.pos[1] = ball.pos[1] + (ball.vel_vector[1] * (t_time2 - ball.ball_time))
+        # for ball in self.balls:
+            # print(ball.ballID, ball.pos)
+        # time.sleep(10)
+        # print(ball_set)
+        return ball_set
+
 
 class Ball():
     def __init__(self, ballID, pos, r, vel_vector, color):
@@ -395,14 +324,29 @@ class Ball():
         self.startpos = pos
         self.pos = pos
         self.r = r
-        self.mass = r
+        self.mass = r ** 3
         self.color = color
-        self.vel_multiplier = 2
-        self.vel_vector = self.vel_multiplier * vel_vector #vel for tick
+        self.vel_vector = vel_vector #vel for tick
         self.path = [pos]
         self.collisions = []
         self.predicted_collisions = []
         self.ball_time = 0
+
+    def copy_ball(self):
+        newBall = Ball(self.ballID, copy.deepcopy(self.pos), self.r, copy.deepcopy(self.vel_vector), self.color)
+        # newBall.ballID = self.ballID
+        newBall.startpos = copy.deepcopy(self.startpos)
+        # newBall.pos = copy.deepcopy(self.pos)
+        # newBall.r = self.r
+        newBall.mass = self.r
+        # newBall.color = self.color
+        # newBall.vel_vector = self.vel_multiplier * self.vel_vector #vel for tick
+        newBall.path = copy.deepcopy(self.path)
+        newBall.collisions = copy.deepcopy(self.collisions)
+        newBall.predicted_collisions = copy.deepcopy(self.predicted_collisions)
+        newBall.ball_time = copy.deepcopy(self.ball_time)
+
+        return newBall
     
     def update_ball(self, t_time):
         self.pos += self.vel_vector
@@ -463,80 +407,48 @@ class View():
         # for ball in table.balls:
         #     ball.pos = copy.deepcopy(ball.startpos)
         #     ball.ball_time = 0
-        if len(table.collision_list) != 0:
 
-            if t_time > table.depth:
-                print("END!!!!")
-                return
+        # if len(table.collision_list) != 0:
 
-            for element in table.collision_list:
-                # print(element)
-                # print(t_time)
-                # time.sleep(1)
-                if element[1] > t_time:
-                    break
-                else:
-                    for ball in table.balls:
-                        if ball.ballID == element[0]:
-                            ball.vel_vector = copy.deepcopy(element[2])
-                            ball.pos = copy.deepcopy(element[3])
-                            # print(ball.pos)
-                            ball.ball_time = element[1]
+        #     if t_time > table.depth:
+        #         print("END!!!!")
+        #         return
+
+        #     for element in table.collision_list:
+        #         # print(element)
+        #         # print(t_time)
+        #         # time.sleep(1)
+        #         if element[1] > t_time:
+        #             break
+        #         else:
+        #             for ball in table.balls:
+        #                 if ball.ballID == element[0]:
+        #                     ball.vel_vector = copy.deepcopy(element[2])
+        #                     ball.pos = copy.deepcopy(element[3])
+        #                     # print(ball.pos)
+        #                     ball.ball_time = element[1]
         
-        for ball in table.balls:
-            # print([ball.pos[0] + (ball.vel_vector[0] * (t_time - ball.ball_time)), DIM_BOARD_Y - (ball.pos[1] + (ball.vel_vector[1] * (t_time - ball.ball_time)))])
-            pygame.draw.circle(screen, ball.color, [ball.pos[0] + (ball.vel_vector[0] * (t_time - ball.ball_time)), DIM_BOARD_Y - (ball.pos[1] + (ball.vel_vector[1] * (t_time - ball.ball_time)))], ball.r)
-        
-
-    def render_real_time(self, screen, table, t_time):
-        screen.fill((255,255,255))
-        pygame.draw.line(screen, (0,255,255), (0,0), (DIM_BOARD_X,0), 5)
-        pygame.draw.line(screen, (0,255,0), (0,0), (0,DIM_BOARD_Y), 5)
-        pygame.draw.line(screen, (255,0,255), (0,DIM_BOARD_Y-1), (DIM_BOARD_X,DIM_BOARD_Y-1), 5)
-        pygame.draw.line(screen, (255,255,0), (DIM_BOARD_X-1,0), (DIM_BOARD_X-1,DIM_BOARD_Y), 5)
-        print(table.collision_list)
-        time.sleep(0.1)
-
         # for ball in table.balls:
-            # print(ball.ballID, ball.vel_vector)
-        for ball in table.balls:
-            ball.pos = copy.deepcopy(ball.startpos)
-            # ball.ball_time = 0
-        if len(table.collision_list) != 0:
-
-            # if t_time > table.collision_list[-1][1]:
-            #     print("END!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-            for element in table.collision_list:
-                # print(element)
-                # print(t_time)
-                # time.sleep(1)
-                if element[1] > t_time:
-                    break
-                else:
-                    for ball in table.balls:
-
-                        if ball.ballID == element[0]:
-                            ball.vel_vector = copy.deepcopy(element[2])
-                            ball.pos = copy.deepcopy(element[3])
-                            # print(ball.pos)
-                            ball.ball_time = copy.deepcopy(element[1])
+        #     print(ball.ballID, ball.vel_vector)
+        #     pygame.draw.circle(screen, ball.color, [ball.pos[0] + (ball.vel_vector[0] * (t_time - ball.ball_time)), DIM_BOARD_Y - (ball.pos[1] + (ball.vel_vector[1] * (t_time - ball.ball_time)))], ball.r)
         
-        for ball in table.balls:
-            ball.pos[0] = ball.pos[0] + (ball.vel_vector[0] * (t_time - ball.ball_time))
-            ball.pos[1] = ball.pos[1] + (ball.vel_vector[1] * (t_time - ball.ball_time))
+        
+        # pygame.display.flip()
+        # time.sleep(1)
+        ball_set = table.create_ball_set_to_render(t_time)
 
+        for ball in ball_set:
+            # print(ball.ballID, ball.vel_vector)
             pygame.draw.circle(screen, ball.color, [ball.pos[0], DIM_BOARD_Y - ball.pos[1]], ball.r)
-
-            
-
+        # pygame.display.flip()
+        # time.sleep(1)
 
 
 clock = pygame.time.Clock()
 
 table = Table()
 view = View()
-table.generate_random_ball(10)
+# table.generate_random_ball(10)
 # table.add_ball(100*multiplier, 200/4*multiplier + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]))
 # table.add_ball(424/4*multiplier, 212/4*multiplier + DIM_BALL_R, DIM_BALL_R, np.array([0.,-0.]))
 # table.add_ball(424/4*multiplier, 188/4*multiplier + DIM_BALL_R, DIM_BALL_R, np.array([-0.,0.]))
@@ -546,6 +458,8 @@ table.generate_random_ball(10)
 # table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([1.,0.1]), (255,0,0))
 # table.add_ball(2, np.array([500., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([-1.,0.]), (0,120,0))
 
+table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([1.,0.1]), (255,0,0))
+table.add_ball(2, np.array([500., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([-1.,0.]), (0,120,0))
 
 # table.add_ball(500, 100 + DIM_BALL_R, DIM_BALL_R, np.array([-1.,1.]))
 # table.add_ball(100, 100 + DIM_BALL_R, DIM_BALL_R, np.array([1.,1.]))
@@ -556,78 +470,43 @@ def save_image(it_num):
 
 # time.sleep(2)
 # table.t_time = 
+anim_time = 0
 viewTable = table.copy_table()
 table.predict_all_collisions(10)
+
 whatever = 10
-fps = 60
+fps = 120
 while not table.balls_stopped():
     # print(table.balls_stopped())
     for event in pygame.event.get():        
         if event.type == pygame.QUIT:
             running = False   
         if event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
-            if fps == 60:
-                fps = 1
-            else:
+            if fps == 120:
                 fps = 60
+            else:
+                fps = 120
 
 
+    if anim_time >= table.d_time:
+        table.update_table()
+        table.predict_all_collisions(1) #prediction depth
 
-    if table.t_time >= whatever:
-        # for ball in table.balls:
-            # ball.pos = copy.deepcopy(ball.startpos)
-            # ball.ball_time = 0
-
-        if len(table.collision_list) != 0:
-
-            for element in table.collision_list:
-                # print(element)
-                # print(t_time)
-                # time.sleep(1)
-                if element[1] > table.t_time:
-                    break
-                else:
-                    for ball in table.balls:
-                        if ball.ballID == element[0]:
-                            ball.vel_vector = element[2]
-                            ball.pos = element[3]
-                            # print(ball.pos)
-                            ball.ball_time = element[1]
-                
-        for ball in table.balls:
-            # print(ball.pos, ball.vel_vector)
-            ball.pos[0] = ball.pos[0] + (ball.vel_vector[0] * (table.t_time - ball.ball_time))
-            ball.pos[1] = ball.pos[1] + (ball.vel_vector[1] * (table.t_time - ball.ball_time))
-            ball.startpos = copy.deepcopy(ball.pos)
-            ball.ball_time = table.t_time
-
-            # print(ball.pos, ball.vel_vector)
-            # time.sleep(2)
-
-            # pygame.draw.circle(screen, ball.color, [ball.pos[0] + (ball.vel_vector[0] * (t_time - ball.ball_time)), DIM_BOARD_Y - (ball.pos[1] + (ball.vel_vector[1] * (t_time - ball.ball_time)))], ball.r)
-
-
-
-        table.predict_all_collisions(10)
-        whatever += 10
-    # if table.t_time >= 400:
-    #     print("NOPE")
-    #     break
-    # print(table.collision_list)
-    # time.sleep(0.1)
-    view.render_from_list(screen, table, table.t_time)
+    view.render_from_list(screen, table, anim_time)
     # view.render_real_time(screen, table, table.t_time)
 
     # for ball in table.balls:
     #     ball.update_ball_pos(1)
-    table.t_time+=1
+    anim_time += 1
+    # table.t_time+=1
     # print(table.t_time)
     # table.update_table()
     # view.render(screen, table)
     pygame.display.flip()
     pygame.display.set_caption(str(int(clock.get_fps())))
-    time.sleep(0.001)
-    # clock.tick(fps)
+    # time.sleep(0.01)
+
+    clock.tick(fps)
 
 # render(screen, table)
 # save_image(2)

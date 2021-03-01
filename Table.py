@@ -22,8 +22,8 @@ class Table():
         momentum = 0
         for ball in self.balls:
             momentum += np.linalg.norm(ball.vel_vector) * ball.mass
-        #     print(np.linalg.norm(ball.vel_vector), ball.mass)
-        # print("-------------")
+            print(np.linalg.norm(ball.vel_vector), ball.mass)
+        print("-------------")
         return momentum
 
 
@@ -41,10 +41,14 @@ class Table():
         self.balls.append(Ball(ballID, pos, r, vel_vector, color))
     
 
-    def check_for_update_prediction(self, anim_time):
+    def check_for_update_prediction(self, anim_time, lookahead):
         if anim_time >= self.d_time:
             self.update_table()
-            self.predict_all_collisions(1) #prediction depth
+            # print(self.balls[0].pos)
+            # print(self.balls[0].vel_vector)
+            self.predict_all_collisions(lookahead) #prediction depth
+            # print(self.collision_list)
+            # print("STEP")
 
     def update_table(self):
         # print("abc")
@@ -59,7 +63,7 @@ class Table():
                 
         for ball in self.balls:
             # print(ball.pos, ball.vel_vector)
-            ball.update_ball_pos(self.d_time- ball.ball_time)
+            ball.update_ball_pos(self.d_time - ball.ball_time)
             ball.startpos = copy.deepcopy(ball.pos)
             ball.ball_time = self.d_time
         
@@ -82,6 +86,7 @@ class Table():
 
 
     def predict_all_collisions(self, depth_time):
+        # print("ABC")
         tmp_depth_time = depth_time
 
         self.collision_list = []
@@ -200,11 +205,15 @@ class Table():
             return min(correct_roots)
 
     def check_calculated_time(self, time, ball):
-        if time <= 0.00001 or isinstance(time, complex): #added time <= 0.00001 to get rid of two balls blocking. May cause problems!
+        print(time)
+        if time < 9e-13 or isinstance(time, complex): #added time <= 0.00001 to get rid of two balls blocking. May cause problems!
+            print("NOPE1")
             return False
         if ball.pos[0] + time*ball.vel_vector[0] >= 0 + ball.r and ball.pos[0] + time*ball.vel_vector[0] <= self.dimX - ball.r and\
             ball.pos[1] + time*ball.vel_vector[1] >= 0 + ball.r and ball.pos[1] + time*ball.vel_vector[1] <= self.dimY - ball.r:
+            print("YUP")
             return True
+        print("NOPE2")
         return False
 
 
@@ -221,10 +230,11 @@ class Table():
         col_time = 1000000
         wall = None # wall 0 - left, wall 1 - right, wall 2 - bottom, wall 3 - top
         for i in range(len(times)):
-            if times[i] < col_time and times[i] >= 0.00001: #added time <= 0.00001 to get rid of two balls blocking. May cause problems!
+            if times[i] < col_time and times[i] > 9e-13: #added time <= 0.00001 to get rid of two balls blocking. May cause problems!
                 col_time = times[i]
                 wall = i
         
+        # print(times)
         # print(self.t_time, ball.ballID, col_time, wall)
         
         return (col_time, wall)

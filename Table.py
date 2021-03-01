@@ -3,6 +3,7 @@ import copy
 from Ball import Ball
 import itertools
 import random
+import math
 
 
 class Table():
@@ -22,8 +23,8 @@ class Table():
         momentum = 0
         for ball in self.balls:
             momentum += np.linalg.norm(ball.vel_vector) * ball.mass
-            print(np.linalg.norm(ball.vel_vector), ball.mass)
-        print("-------------")
+        #     print(np.linalg.norm(ball.vel_vector), ball.mass)
+        # print("-------------")
         return momentum
 
 
@@ -93,7 +94,7 @@ class Table():
         pred_table = self.copy_table()
 
         while depth_time >= 0:
-
+            # print("dtime:", depth_time)
             first_col = pred_table.predict_wall_ball()
 
             if first_col[-1] > depth_time:
@@ -187,16 +188,26 @@ class Table():
             return (ball.vel_vector * np.array([1,-1]))
 
     def calculate_ball_col_time(self, ball1, ball2):
-       
+        # print(np.linalg.norm(ball1.pos - ball2.pos))
         p = [np.dot((ball1.vel_vector - ball2.vel_vector), (ball1.vel_vector - ball2.vel_vector)),
             2*np.dot(ball1.vel_vector - ball2.vel_vector, ball1.pos - ball2.pos),
             np.linalg.norm(ball1.pos - ball2.pos)**2 - (ball1.r + ball2.r)**2
         ]
 
+
         roots = np.roots(p)
         correct_roots = []
         for x in roots:
+            # print(np.linalg.norm((ball1.pos + x*ball1.vel_vector) - (ball2.pos + x*ball2.vel_vector)), ball1.r + ball2.r, (np.linalg.norm((ball1.pos + x*ball1.vel_vector) - (ball2.pos + x*ball2.vel_vector)) >= ball1.r + ball2.r))
             if self.check_calculated_time(x, ball1) and self.check_calculated_time(x, ball2):
+                # print("yes")
+                prec = 13
+                # print(np.linalg.norm((ball1.pos + x*ball1.vel_vector) - (ball2.pos + x*ball2.vel_vector)), ball1.r + ball2.r)
+                while np.linalg.norm((ball1.pos + (x * ball1.vel_vector)) - (ball2.pos + (x * ball2.vel_vector))) < ball1.r + ball2.r and prec > 0:
+                    x = self.round_time_down(x, prec)
+                    prec -= 1
+                    # print(np.linalg.norm((ball1.pos + x*ball1.vel_vector) - (ball2.pos + x*ball2.vel_vector)), ball1.r + ball2.r)
+                    # print("LOOOOL")
                 correct_roots.append(x)
 
         if len(correct_roots) == 0:
@@ -204,16 +215,21 @@ class Table():
         else:
             return min(correct_roots)
 
+    def round_time_down(self, time, precision):
+        return math.floor(time * (10 ** precision)) / (10 ** precision)
+
+
     def check_calculated_time(self, time, ball):
-        print(time)
-        if time < 9e-13 or isinstance(time, complex): #added time <= 0.00001 to get rid of two balls blocking. May cause problems!
-            print("NOPE1")
+        # print(time)
+        # print(ball.pos, ball.vel_vector)
+        if time <= 0 or isinstance(time, complex): #added time <= 0.00001 to get rid of two balls blocking. May cause problems!
+            # print("NOPE1")
             return False
         if ball.pos[0] + time*ball.vel_vector[0] >= 0 + ball.r and ball.pos[0] + time*ball.vel_vector[0] <= self.dimX - ball.r and\
             ball.pos[1] + time*ball.vel_vector[1] >= 0 + ball.r and ball.pos[1] + time*ball.vel_vector[1] <= self.dimY - ball.r:
-            print("YUP")
+            # print("YUP")
             return True
-        print("NOPE2")
+        # print("NOPE2")
         return False
 
 
@@ -264,7 +280,7 @@ class Table():
                 ballID,
                 pos,
                 r,
-                np.array([random.uniform(-1, 1), random.uniform(-1, 1)]),
+                np.array([random.uniform(-4, 4), random.uniform(-4, 4)]),
                 (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
                 ))            
 

@@ -1,4 +1,5 @@
 # import pygame
+from numpy.lib.function_base import _calculate_shapes
 from Table import Table
 from View import View
 from Ball import Ball
@@ -17,7 +18,7 @@ DIM_BOARD_Y = 400
 DIM_BALL_R = 20
 
 anim_time = 0
-fps = 60
+fps = 600
 step = 1
 
 
@@ -60,43 +61,64 @@ screen.fill((255,255,255))
 
 clock = pygame.time.Clock()
 
+# initial_momentum = table.calculate_momentum()
+# v_list = []
+# for ball in table.balls:
+#     v_list.append([ball])
+# v_list1 = []
+# v_list2 = []
+# momentum_list = []
+# time_list = []
+breaking_var = False
 
-while anim_time <= table.d_time:
-    # print(table.balls_stopped())
+while anim_time <= table.d_time and not breaking_var:
     for event in pygame.event.get():        
         if event.type == pygame.QUIT:
             running = False   
-        if event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
+        elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
             if fps == 600:
                 fps = 60
             else:
                 fps = 600
+        elif event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
+            breaking_var = True
 
     # print(anim_time)
     table.check_for_update_prediction(anim_time, step)
-    # if anim_time >= table.d_time:
-    #     table.update_table()
-    #     table.predict_all_collisions(1) #prediction depth
 
     view.render_from_list(screen, table, anim_time)
-    print(table.calculate_momentum())
-    # view.render_real_time(screen, table, table.t_time)
+    # for i in range(len(table.balls)):
+    #     v_list[i].append(np.linalg.norm(table.balls[i].vel_vector))
+    # print(table.calculate_momentum())
+    # momentum_list.append(table.calculate_momentum())
+    # v_list1.append(np.linalg.norm(table.balls[0].vel_vector))
+    # v_list2.append(np.linalg.norm(table.balls[1].vel_vector))
+    # time_list.append(anim_time)
 
-    # for ball in table.balls:
-    #     ball.update_ball_pos(1)
-    print(anim_time)
+
     anim_time += step
-    # table.t_time+=1
-    # print(table.t_time)
-    # table.update_table()
-    # view.render(screen, table)
-    # pygame.display.flip()
+
     pygame.display.set_caption(str(int(clock.get_fps())))
-    # time.sleep(0.01)
 
     clock.tick(fps)
 
-# render(screen, table)
-# save_image(2)
-# time.sleep(10)
 
+
+# from matplotlib import pyplot as plt
+
+# m, b = np.polyfit(time_list, momentum_list, 1)
+# time_list = np.array(time_list)
+
+# plt.subplot(311)
+# plt.plot(time_list, v_list1)
+# plt.subplot(312)
+# plt.plot(time_list, v_list2)
+# plt.subplot(313)
+# plt.plot(time_list, momentum_list)
+# plt.plot(time_list, [initial_momentum for _ in time_list])
+# plt.plot(time_list, m*time_list + b)
+
+# for i in range(len(v_list)):
+#     plt.plot(time_list, v_list[i][1:], c = tuple([x/255 for x in v_list[i][0].color]))
+
+# plt.show()

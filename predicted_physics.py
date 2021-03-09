@@ -1,65 +1,53 @@
 # import pygame
 from numpy.lib.function_base import _calculate_shapes
 from Table import Table
-from View import View
+from View_pygame import View as Viewpg
 from Ball import Ball
+from View_tkinter import View as Viewtk
 import numpy as np
-
-# multiplier = 4
-
-# DIM_BOARD_X = 224*multiplier
-# DIM_BOARD_Y = 112*multiplier
-# DIM_BALL_R = math.ceil(2.8*multiplier)
-
 
 # PROPERTIES 
 DIM_BOARD_X = 800
 DIM_BOARD_Y = 400
 DIM_BALL_R = 20
-
 anim_time = 0
-fps = 600
+fps = 60
 step = 1
 
-
+# INITS
 table = Table(DIM_BOARD_X, DIM_BOARD_Y)
-view = View()
-table.generate_random_ball(10)
-# table.add_ball(100*multiplier, 200/4*multiplier + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]))
-# table.add_ball(424/4*multiplier, 212/4*multiplier + DIM_BALL_R, DIM_BALL_R, np.array([0.,-0.]))
-# table.add_ball(424/4*multiplier, 188/4*multiplier + DIM_BALL_R, DIM_BALL_R, np.array([-0.,0.]))
+view = Viewpg(DIM_BOARD_X, DIM_BOARD_Y)   # PyGame view init
+# view = Viewtk(DIM_BOARD_X, DIM_BOARD_Y)  # Tkinter view init
 
-# table.add_ball(100/4*multiplier, 200/4*multiplier + DIM_BALL_R, DIM_BALL_R, np.array([0.5,0.01]))
 
-# table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([1.,0.1]), (255,0,0))
-# table.add_ball(2, np.array([500., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([-1.,0.]), (0,120,0))
+# BALL CONFIGURATIONS
+# table.generate_random_ball(10)
 
+# --- Two big balls
 # table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([1.5,0.5]), (255,0,0))
 # table.add_ball(2, np.array([500., 190.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([0.7,0.5]), (255,0,0))
 
+# --- Big & small
 # table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([1.,0.1]), (255,0,0))
 # table.add_ball(2, np.array([500., 200.]) + DIM_BALL_R, DIM_BALL_R/4, np.array([-1.,0.]), (0,120,0))
 
-# table.add_ball(500, 100 + DIM_BALL_R, DIM_BALL_R, np.array([-1.,1.]))
-# table.add_ball(100, 100 + DIM_BALL_R, DIM_BALL_R, np.array([1.,1.]))
+# --- 5 balls of the same size
+table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([1.,0.1]), (255,0,0))
+table.add_ball(2, np.array([200., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]), (255,0,0))
+table.add_ball(3, np.array([300., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]), (255,0,0))
+table.add_ball(4, np.array([400., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]), (255,0,0))
+table.add_ball(5, np.array([500., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([-2.,0.]), (255,0,0))
 
-# def save_image(it_num):
-#     filename = str(it_num)+".png"
-#     pygame.image.save(screen, filename)
 
-
-
-# Initial predicition
+# INIT PREDICTION
 table.predict_all_collisions(step)
 
 
-# PyGame Init for visualization
+# PYGAME INIT
 import pygame
 pygame.init()
-screen = pygame.display.set_mode([DIM_BOARD_X, DIM_BOARD_Y])
-screen.fill((255,255,255))
-
 clock = pygame.time.Clock()
+
 
 # initial_momentum = table.calculate_momentum()
 # v_list = []
@@ -69,8 +57,9 @@ clock = pygame.time.Clock()
 # v_list2 = []
 # momentum_list = []
 # time_list = []
-breaking_var = False
 
+
+breaking_var = False
 while anim_time <= table.d_time and not breaking_var:
     for event in pygame.event.get():        
         if event.type == pygame.QUIT:
@@ -86,7 +75,8 @@ while anim_time <= table.d_time and not breaking_var:
     # print(anim_time)
     table.check_for_update_prediction(anim_time, step)
 
-    view.render_from_list(screen, table, anim_time)
+    view.render_from_list(table, anim_time)
+    # view.render_from_list(table, anim_time)
     # for i in range(len(table.balls)):
     #     v_list[i].append(np.linalg.norm(table.balls[i].vel_vector))
     # print(table.calculate_momentum())
@@ -104,6 +94,7 @@ while anim_time <= table.d_time and not breaking_var:
 
 
 
+# TMP ANALYSIS
 # from matplotlib import pyplot as plt
 
 # m, b = np.polyfit(time_list, momentum_list, 1)

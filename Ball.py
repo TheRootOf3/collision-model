@@ -14,6 +14,7 @@ class Ball():
         self.collisions = []
         self.predicted_collisions = []
         self.ball_time = 0
+        self.pos_history = []
 
     def copy_ball(self):
         newBall = Ball(self.ballID, copy.deepcopy(self.pos), self.r, copy.deepcopy(self.vel_vector), self.color)

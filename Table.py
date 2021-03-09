@@ -20,6 +20,7 @@ class Table():
 
 
     def calculate_momentum(self):
+        ''' momentum of the system '''
         momentum = 0
         for ball in self.balls:
             momentum += np.linalg.norm(ball.vel_vector) * ball.mass
@@ -29,6 +30,7 @@ class Table():
 
 
     def copy_table(self):
+        ''' creates clone of the current table obj'''
         newTable = Table(self.dimX, self.dimY)
         newTable.balls = copy.deepcopy(self.balls)
         newTable.friction = self.friction
@@ -39,19 +41,19 @@ class Table():
 
 
     def add_ball(self, ballID, pos, r, vel_vector = np.array([1., 1.]), color = (255, 0, 0)):
+        ''' add ball to the table obj'''
         self.balls.append(Ball(ballID, pos, r, vel_vector, color))
     
 
     def check_for_update_prediction(self, anim_time, lookahead):
+        ''' check if table requires further predictions '''
         if anim_time >= self.d_time:
             self.update_table()
-            # print(self.balls[0].pos)
-            # print(self.balls[0].vel_vector)
             self.predict_all_collisions(lookahead) #prediction depth
-            # print(self.collision_list)
-            # print("STEP")
+
 
     def update_table(self):
+        ''' update table with current state '''
         # print("abc")
         if len(self.collision_list) != 0:
             for element in self.collision_list:
@@ -84,27 +86,27 @@ class Table():
         #     ball.update_ball(self.t_time)
 
 
-
-
     def predict_all_collisions(self, depth_time):
-        # print("ABC")
+        ''' predict collisions for every ball in given depth time '''
         tmp_depth_time = depth_time
 
         self.collision_list = []
-        pred_table = self.copy_table()
+        pred_table = self.copy_table() # Create copy of the table for predictions
 
         while depth_time >= 0:
-            # print("dtime:", depth_time)
-            first_col = pred_table.predict_wall_ball()
-
-            if first_col[-1] > depth_time:
-                break
+            ''' find all collisions until depth time runs out '''
             
+            first_col = pred_table.predict_wall_ball() # Find the first collision between any two objects
+
+            if first_col[-1] > depth_time: # If the collision occurs after the remaining depth time, break
+                break
 
             for ball in pred_table.balls:
-                ball.update_ball_pos(first_col[-1])
+                ''' update all balls on the table copy '''
+                ball.update_ball_pos(first_col[-1]) 
 
             if first_col[0] == 0:
+                ''' if the collision occurs between a ball and a wall '''
                 # for ball in pred_table.balls:
                 #     ball.update_ball_pos(first_col[-1])
                 first_col[1].vel_vector = pred_table.return_new_wall_vector(first_col[1], first_col[2])
@@ -116,7 +118,7 @@ class Table():
                 pred_table.d_time += first_col[-1]
 
             else:
-
+                ''' if the collision occurs between two balls '''
                 # print(np.linalg.norm(first_col[1].vel_vector), np.linalg.norm(first_col[2].vel_vector))
                 first_col[1].vel_vector, first_col[2].vel_vector = pred_table.calculate_new_vectors(first_col[1].mass, first_col[2].mass, first_col[1].vel_vector, first_col[2].vel_vector, first_col[1].pos, first_col[2].pos)
                 # print(np.linalg.norm(first_col[1].vel_vector), np.linalg.norm(first_col[2].vel_vector))
@@ -146,12 +148,6 @@ class Table():
                 min_indx = x
 
         return min_indx
-    
-    def return_first_col(self, col1, col2):
-        if col2 is None or col1[-1] < col2[-1]:
-            return col1
-        else:
-            return col2
 
     def predict_wall_ball(self):
         col_list = []
@@ -182,12 +178,15 @@ class Table():
                 ball.color = (0,255,255)
 
     def return_new_wall_vector(self, ball, wall):
+        ''' new velocity vectors after collision between a ball and a wall '''
+
         if wall < 2:
             return (ball.vel_vector * np.array([-1,1]))
         else:
             return (ball.vel_vector * np.array([1,-1]))
 
     def calculate_ball_col_time(self, ball1, ball2):
+        ''' calculating in what time there will be a collision between two balls'''
         # print(np.linalg.norm(ball1.pos - ball2.pos))
         p = [np.dot((ball1.vel_vector - ball2.vel_vector), (ball1.vel_vector - ball2.vel_vector)),
             2*np.dot(ball1.vel_vector - ball2.vel_vector, ball1.pos - ball2.pos),
@@ -285,11 +284,13 @@ class Table():
                 ))            
 
     def calculate_new_vectors(self, m1, m2, v1, v2, pos1, pos2):
+        ''' new velocity vectors after collision between two balls '''
         v_new1 = v1 - 2 * m2/(m1 + m2) * (np.dot(v1 - v2, pos1 - pos2)/((np.linalg.norm(pos1 - pos2))) ** 2)*(pos1 - pos2)
         v_new2 = v2 - 2 * m1/(m1 + m2) * (np.dot(v2 - v1, pos2 - pos1)/((np.linalg.norm(pos2 - pos1))) ** 2)*(pos2 - pos1)
         return (v_new1, v_new2)
 
     def create_ball_set_to_render(self, t_time2):
+        ''' create ball objects with appropriate positions to draw ''' 
         ball_set = []
 
         for ball in self.balls:

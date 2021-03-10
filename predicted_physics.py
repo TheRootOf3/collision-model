@@ -1,9 +1,9 @@
 # import pygame
 from numpy.lib.function_base import _calculate_shapes
-from Table import Table
-from View_pygame import View as Viewpg
-from Ball import Ball
-from View_tkinter import View as Viewtk
+from model.Table import Table
+from model.View_pygame import View as Viewpg
+from model.Ball import Ball
+from model.View_tkinter import View as Viewtk
 import numpy as np
 
 # PROPERTIES 
@@ -24,19 +24,19 @@ view = Viewpg(DIM_BOARD_X, DIM_BOARD_Y)   # PyGame view init
 # table.generate_random_ball(10)
 
 # --- Two big balls
-# table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([1.5,0.5]), (255,0,0))
-# table.add_ball(2, np.array([500., 190.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([0.7,0.5]), (255,0,0))
+table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([1.5,0.5]), (255,0,0))
+table.add_ball(2, np.array([500., 190.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([0.7,0.5]), (255,0,0))
 
 # --- Big & small
 # table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([1.,0.1]), (255,0,0))
 # table.add_ball(2, np.array([500., 200.]) + DIM_BALL_R, DIM_BALL_R/4, np.array([-1.,0.]), (0,120,0))
 
 # --- 5 balls of the same size
-table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([1.,0.1]), (255,0,0))
-table.add_ball(2, np.array([200., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]), (255,0,0))
-table.add_ball(3, np.array([300., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]), (255,0,0))
-table.add_ball(4, np.array([400., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]), (255,0,0))
-table.add_ball(5, np.array([500., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([-2.,0.]), (255,0,0))
+# table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([1.,0.1]), (255,0,0))
+# table.add_ball(2, np.array([200., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]), (255,0,0))
+# table.add_ball(3, np.array([300., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]), (255,0,0))
+# table.add_ball(4, np.array([400., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([0.,0.]), (255,0,0))
+# table.add_ball(5, np.array([500., 200.]) + DIM_BALL_R, DIM_BALL_R, np.array([-2.,0.]), (255,0,0))
 
 
 # INIT PREDICTION

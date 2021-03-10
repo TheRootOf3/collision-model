@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-from Ball import Ball
+from model.Ball import Ball
 import itertools
 import random
 import math

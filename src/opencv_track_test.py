@@ -3,15 +3,15 @@ import numpy as np
 
 import time
 import pygame
-import copy
 
 from model.Table import Table
-from model.View_pygame import View
+from view.View_pygame import View
+
 
 def create_trackers(cap):
     tracker_list = []
     while True:
-        for event in pygame.event.get():        
+        for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
@@ -26,18 +26,20 @@ def create_trackers(cap):
         x = circle[0]
         y = circle[1]
         r = circle[2]
-        
-        bbox = (x-r, y-r, 2*r, 2*r)
+
+        bbox = (x - r, y - r, 2 * r, 2 * r)
         tracker_list.append(cv2.TrackerCSRT_create())
         tracker_list[-1].init(frame, bbox)
     return (tracker_list, circles)
 
+
 def check_for_circles(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # gray = cv2.GaussianBlur(gray, ksize= (9, 9), sigmaX=2)
-    gray = cv2.blur(gray, (3, 3)) 
+    gray = cv2.blur(gray, (3, 3))
     # circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.3, param1=100, param2=10, minDist=10, maxRadius=50)
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.5, param1=100, param2=60, minDist=100, minRadius=30, maxRadius=50)
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.5, param1=100, param2=60, minDist=100, minRadius=30,
+                               maxRadius=50)
     # circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.5, param1=30, param2=60, minDist=20, minRadius=30, maxRadius=50)
 
     if circles is not None:
@@ -53,16 +55,19 @@ def check_for_circles(image):
         # cv2.imshow("output", np.hstack([gray]))
     return (image, circles)
 
-def drawCircle(img,bbox):
-    x, y, r = int(bbox[0] + bbox[2]/2), int(bbox[1] + bbox[2]/2), int(bbox[2]/2)
-    cv2.circle(img, (x,y), r, (0, 255, 0), 3)
+
+def drawCircle(img, bbox):
+    x, y, r = int(bbox[0] + bbox[2] / 2), int(bbox[1] + bbox[2] / 2), int(bbox[2] / 2)
+    cv2.circle(img, (x, y), r, (0, 255, 0), 3)
+
 
 def drawBox(img, bbox):
     x, y, w, h = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
-    cv2.rectangle(img, (x, y), ((x + w), (y + h)), (255, 0, 255), 3, 3 )
+    cv2.rectangle(img, (x, y), ((x + w), (y + h)), (255, 0, 255), 3, 3)
+
 
 def bTc(bbox):
-    return (int(bbox[0] + bbox[2]/2), int(bbox[1] + bbox[2]/2), int(bbox[2]/2))
+    return (int(bbox[0] + bbox[2] / 2), int(bbox[1] + bbox[2] / 2), int(bbox[2] / 2))
 
 
 def register_balls(table, circles):
@@ -88,11 +93,10 @@ view = View(DIM_BOARD_X, DIM_BOARD_Y)
 
 register_balls(table, circles)
 
-
 while True:
-    for event in pygame.event.get():        
+    for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False  
+            running = False
 
     success, img = cap.read()
     output, circles = check_for_circles(img)
@@ -104,14 +108,13 @@ while True:
                     circle_tracked = True
             if not circle_tracked:
                 print("adding a ball")
-                table.add_ball(table.balls[-1].ballID + 1, np.array([x, DIM_BOARD_Y - y], dtype='float64'), r, np.array([0., 0.]))
-                
-                bbox = (x-r, y-r, 2*r, 2*r)
+                table.add_ball(table.balls[-1].ballID + 1, np.array([x, DIM_BOARD_Y - y], dtype='float64'), r,
+                               np.array([0., 0.]))
+
+                bbox = (x - r, y - r, 2 * r, 2 * r)
                 tracker_list.append(cv2.TrackerCSRT_create())
                 tracker_list[-1].init(img, bbox)
                 table.balls[-1].pos_history.append(table.balls[-1].pos)
-
-
 
     any_success = False
     to_pop = []
@@ -120,11 +123,11 @@ while True:
 
         if success:
             any_success = True
-            drawBox(img,bbox)
+            drawBox(img, bbox)
             drawCircle(img, bbox)
             x, y, r = bTc(bbox)
             if len(table.balls[i].pos_history) >= 5:
-                table.balls[i].vel_vector = (table.balls[i].pos_history[-1] - table.balls[i].pos_history[-5])/5
+                table.balls[i].vel_vector = (table.balls[i].pos_history[-1] - table.balls[i].pos_history[-5]) / 5
                 table.balls[i].vel_vector = (np.array([x, DIM_BOARD_Y - y], dtype='float64') - table.balls[i].pos)
             table.balls[i].pos = np.array([x, DIM_BOARD_Y - y], dtype='float64')
             table.balls[i].pos_history.append(table.balls[i].pos)
@@ -137,9 +140,6 @@ while True:
         tracker_list.pop(i)
         table.balls.pop(i)
 
-
-          
-        
     cv2.imshow("Tracking", img)
     view.render(table)
     key_pressed = cv2.waitKey(1)
@@ -152,7 +152,7 @@ while True:
         table.balls = []
         tracker_list, circles = create_trackers(cap)
         register_balls(table, circles)
-    
+
     if key_pressed == ord(' '):
         print("starting simulation!")
         # time.sleep(1)
@@ -172,9 +172,9 @@ while True:
         if play:
             anim_time = 0
             while table.d_time >= anim_time:
-                for event in pygame.event.get():        
+                for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        running = False  
+                        running = False
                     if event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
                         out = True
 
@@ -191,7 +191,6 @@ while True:
         register_balls(table, circles)
 
     if key_pressed == ord('q'):
-       break
+        break
 
 cap.release()
-

@@ -17,7 +17,7 @@ DIM_BALL_R = math.ceil(2.8*multiplier)
 
 pygame.init()
 screen = pygame.display.set_mode([DIM_BOARD_X, DIM_BOARD_Y])
-screen.fill((255,255,255))
+screen.fill((255, 255, 255))
 
 
 class Table():
@@ -27,11 +27,11 @@ class Table():
         # self.friction = 0.9999
         self.friction = 1
 
-    def add_ball(self, x, y, r, vel_vector = np.array([1., 1.]), color = (255, 0, 0)):
+    def add_ball(self, x, y, r, vel_vector=np.array([1., 1.]), color=(255, 0, 0)):
         self.balls.append(Ball(x, y, r, vel_vector, color))
-    
+
     def update_table(self):
-        
+
         self.check_ball_collisions()
         self.apply_friction()
 
@@ -40,7 +40,7 @@ class Table():
             ball.check_wall_collisions()
             ball.update_ball()
 
-        
+
     def generate_cords(self):
         r = random.randint(20, 150)
         x = random.randint(r, DIM_BOARD_X - r)
@@ -52,9 +52,9 @@ class Table():
         for ball in self.balls:
             if (ball.x - cords[0]) ** 2 + (ball.y - cords[1]) ** 2 <= (ball.r + cords[2]) ** 2:
                 return False
-        
+
         return True
-    
+
     def generate_random_ball(self, ball_num):
         for _ in range (ball_num):
             cords = self.generate_cords()
@@ -77,7 +77,7 @@ class Table():
                 ball1.collisions.append((int((ball1.x + ball2.x)/2), int((ball1.y + ball2.y)/2)))
                 ball2.collisions.append((int((ball1.x + ball2.x)/2), int((ball1.y + ball2.y)/2)))
                 ball1.vel_vector, ball2.vel_vector = self.calculate_new_vectors(ball1.mass, ball2.mass, ball1.vel_vector, ball2.vel_vector, np.array([ball1.x, ball1.y]), np.array([ball2.x, ball2.y]))
-            
+
 
     def calculate_new_vectors(self, m1, m2, v1, v2, x1, x2):
         v_new1 = v1 - 2 * m2/(m1 + m2) * np.dot(v1 - v2, x1 - x2)/((np.linalg.norm(x1 - x2)) ** 2)*(x1 - x2)
@@ -86,7 +86,7 @@ class Table():
 
     def apply_friction(self):
         for ball in self.balls:
-            ball.vel_vector *= self.friction 
+            ball.vel_vector *= self.friction
             # if abs(ball.vel_vector[0]) < 0.0002 and abs(ball.vel_vector[1]) < 0.0002:
             #     ball.vel_vector[0] = 0
             #     ball.vel_vector[1] = 0
@@ -95,7 +95,7 @@ class Table():
         for ball in self.balls:
             if abs(ball.vel_vector[0]) > 0.0006 or abs(ball.vel_vector[1]) > 0.0006:
                 return False
-            
+
         return True
 
 
@@ -110,7 +110,7 @@ class Ball():
         self.vel_vector = self.vel_multiplier * vel_vector #vel for tick
         self.path = [(x, y)]
         self.collisions = []
-    
+
     def update_ball(self):
         self.x += self.vel_vector[0]
         self.y += self.vel_vector[1]
@@ -119,13 +119,13 @@ class Ball():
         if self.x >= (DIM_BOARD_X - self.r) or self.x <= self.r:
             self.vel_vector[0] = -1 * self.vel_vector[0]
             self.path.append((self.x, self.y))
-            
+
         if self.y >= (DIM_BOARD_Y - self.r) or self.y <= self.r:
             self.vel_vector[1] = -1 * self.vel_vector[1]
             self.path.append((self.x, self.y))
 
-    
-        
+
+
 
 
 def render(screen, table):
@@ -174,9 +174,9 @@ def save_image(it_num):
 fps = 600
 while not table.balls_stopped():
     # print(table.balls_stopped())
-    for event in pygame.event.get():        
+    for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False   
+            running = False
         if event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
             if fps == 600:
                 fps = 60

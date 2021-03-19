@@ -1,10 +1,8 @@
 # import pygame
-from numpy.lib.function_base import _calculate_shapes
 from model.Table import Table
-from model.View_pygame import View as Viewpg
-from model.Ball import Ball
-from model.View_tkinter import View as Viewtk
+from view.View_pygame import View as ViewPg
 import numpy as np
+import pygame
 
 # PROPERTIES 
 DIM_BOARD_X = 800
@@ -16,16 +14,16 @@ step = 1
 
 # INITS
 table = Table(DIM_BOARD_X, DIM_BOARD_Y)
-view = Viewpg(DIM_BOARD_X, DIM_BOARD_Y)   # PyGame view init
-# view = Viewtk(DIM_BOARD_X, DIM_BOARD_Y)  # Tkinter view init
+view = ViewPg(DIM_BOARD_X, DIM_BOARD_Y)  # PyGame view init
+# view = ViewTk(DIM_BOARD_X, DIM_BOARD_Y)  # Tkinter view init
 
 
 # BALL CONFIGURATIONS
 # table.generate_random_ball(10)
 
 # --- Two big balls
-table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([1.5,0.5]), (255,0,0))
-table.add_ball(2, np.array([500., 190.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([0.7,0.5]), (255,0,0))
+table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R * 6, np.array([1.5, 0.5]), (255, 0, 0))
+table.add_ball(2, np.array([500., 190.]) + DIM_BALL_R, DIM_BALL_R * 6, np.array([0.7, 0.5]), (255, 0, 0))
 
 # --- Big & small
 # table.add_ball(1, np.array([100., 200.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([1.,0.1]), (255,0,0))
@@ -42,12 +40,9 @@ table.add_ball(2, np.array([500., 190.]) + DIM_BALL_R, DIM_BALL_R*6, np.array([0
 # INIT PREDICTION
 table.predict_all_collisions(step)
 
-
 # PYGAME INIT
-import pygame
 pygame.init()
 clock = pygame.time.Clock()
-
 
 # initial_momentum = table.calculate_momentum()
 # v_list = []
@@ -61,9 +56,9 @@ clock = pygame.time.Clock()
 
 breaking_var = False
 while anim_time <= table.d_time and not breaking_var:
-    for event in pygame.event.get():        
+    for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False   
+            running = False
         elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
             if fps == 600:
                 fps = 60
@@ -85,14 +80,11 @@ while anim_time <= table.d_time and not breaking_var:
     # v_list2.append(np.linalg.norm(table.balls[1].vel_vector))
     # time_list.append(anim_time)
 
-
     anim_time += step
 
     pygame.display.set_caption(str(int(clock.get_fps())))
 
     clock.tick(fps)
-
-
 
 # TMP ANALYSIS
 # from matplotlib import pyplot as plt

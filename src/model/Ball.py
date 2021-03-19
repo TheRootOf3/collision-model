@@ -1,7 +1,7 @@
-import copy 
+import copy
 
 
-class Ball():
+class Ball:
     def __init__(self, ballID, pos, r, vel_vector, color):
         self.ballID = ballID
         self.startpos = pos
@@ -9,7 +9,7 @@ class Ball():
         self.r = r
         self.mass = r ** 3
         self.color = color
-        self.vel_vector = vel_vector #vel for tick
+        self.vel_vector = vel_vector  # vel for tick
         self.path = [pos]
         self.collisions = []
         self.predicted_collisions = []
@@ -31,9 +31,9 @@ class Ball():
         newBall.ball_time = copy.deepcopy(self.ball_time)
 
         return newBall
-    
-    def update_ball(self, t_time):
+
+    def update_ball(self):
         self.pos += self.vel_vector
-    
+
     def update_ball_pos(self, time):
         self.pos += time * self.vel_vector
